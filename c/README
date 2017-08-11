@@ -1,0 +1,8 @@
+This directory constist of the following subdirectories
+chain_flow_environment -- this directory consists of 
+                           --- The chain flow definition file
+                           --- The two h files that are generated
+                           --- A directory of chain flow run time files
+                           --- A directory containing the file that user must supply
+                                   To support the chain flow environment
+                           --- A directory containing documentation files
