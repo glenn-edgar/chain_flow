@@ -1,0 +1,5 @@
+This directory contains examples on the use of chain flow for various class of problems.
+To execute examples do
+  python3  "example.py"
+
+Examples are written in python 3 and will not run in python 2.
