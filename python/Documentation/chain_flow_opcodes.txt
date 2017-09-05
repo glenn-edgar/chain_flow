@@ -1,0 +1,201 @@
+
+    Description of Chain Flow Opcodes
+
+    Introduction:
+    
+    Chain Flow programming is done by specifing a chain/link combinations.
+
+    cf = CF_Base_Interpreter()  #instanciate chain flow environment
+
+    # create chain 
+    cf.define_chain("eto_make_measurements", False)
+    # create links
+    cf.insert_link("link_0", "Log", ["starting make measurement"])
+    cf.insert_link("link_1", "Code", [eto.make_measurement])
+    cf.insert_link("link_2", "WaitEvent", ["HOUR_TICK"])
+    cf.insert_link("link_3","Log",["Receiving Hour tick"])
+    cf.insert_link("link_4", "Reset", [])
+
+
+    #
+    #
+    # repeat process
+    #
+    #
+
+    The parameters of 
+    cf.insert_link("link_0", "Log", ["starting make measurement"]) are
+
+    "link_0" -- link name
+    "Log"  -- name of opcode
+    ["starting make measurement"]  -- list of parameters for the "Log opcode"
+
+    In chain flow programming there is a finite set of actions that can be assigned a chain.  These
+    finite set of actions are called opcodes.  The purpose of the opcodes is to reduce the need for programming.
+    The opcodes released in the baseline distrubution is described in this document.  Other user defined opcodes can
+    be defined by the user.
+
+    The opcodes are defined by the following catagories.
+    A.  Opcodes that simply return a specified Return Code
+    B.  One Step / Code Opcodes
+    C. Chain Control
+    D. Event Control
+    E.  Wait opcodes
+    F.  Misc opcodes
+
+
+
+
+    A.  Opcodes that simply return a specified Return Code.
+        1. Terminate
+        2. Reset
+        3. Break
+        4. Halt
+        5. RESET_SYSTEM
+
+        These opcodes are primarily used at the end of a chain as shown in the example at the begining of this document.
+        The primary opcodes Terminate and Reset.  Terminate causes the chain to terminate.  Reset causes the chain
+        to reset and start actions over again.  The opcodes Break and Halt are put in for completeness.  The opcode
+        RESET_SYSTEM is used in embedded system to restart the cpu system.
+
+   B.  One Step / Code Opcodes
+       1. One_Step
+       2. Code
+       3. Check_Event
+    
+       These opcodes are used interface user code to the python envirnoment.  
+       The parameter list for these functions are as follows.
+       [ <<python user function>>, parameter_1 ,..., parameter_n ]
+       The first element of the python list is the user function.
+       The reset of the elements of the python list are parameters for the python function.
+
+       The format of the python function is as follows:  
+       
+       def function( chainFlowHandle, chain_object, parameters, event )
+       The parameters chainFlowHandle and chain_object are for manipulating chains and links.  Normally these parameters
+       are not used.  A description of these parameters is provided in the chain flow api document.
+
+       The parameters of the chain flow environment is a list that was specified in the definition of the link.
+       cf.insert_link("link_0", "One_Step", [<python_function>,a,b,c])
+       parameter[0] is the object of the python function.
+       parameter[1] is a
+       parameter[2] is b
+       parameter[3] is c
+
+       The One_Step opcode executes the specified python function once and returns a DISABLE which disables the link.  This
+       results in the specified python function only running once.  The user specified python function is not needed to return 
+       a value and the return value is ignored.
+
+       The Check Event opcode is used primarily for state machine operation.  A sample link definition is shown as
+       follows:
+       cf.insert_link("link_0", "Check_Event", [<python_function>,ref_event_list,b,c])
+       parameter[0] is the object of the python function.
+       parameter[1] is reference event list
+       parameter[2] is b
+       parameter[3] is c
+
+       The code for executing this opcode is shown below.
+
+       def check_event_code(self, cf_handle, chainObj, parameters, event):
+           if event["name"] == "INIT":
+              func = parameters[0]
+              func(cf_handle , chainObj, parameters, event)
+           elif event["name"] in parameters[1]:
+               func = parameters[0]
+               func(cf_handle, chainObj, parameters, event)
+           return "CONTINUE"
+
+       
+       An initialization event is sent to the reference function to allow for any initialization actions.  
+       If the received event is in the reference event list  then reference function is executed.  The return code
+       for this opcode is always "CONTINUE"
+       
+ 
+       The Code opcode allows a python function to control the return code of the chain flow envirnoment.
+       A sample link definition is shown as follows:
+       cf.insert_link("link_0", "Code", [<python_function>,a,b,c])
+       parameter[0] is the object of the python function.
+       parameter[1] is a
+       parameter[2] is b
+       parameter[3] is c
+
+       The code for executing this opcode is shown below.
+        def code_code(self, cf_handle, chainObj, parameters, event):
+            return_value = parameters[0](cf_handle, chainObj, parameters, event)
+            return return_value
+        Execution passes directly to the specified function.  The specified function is responsibe for sorting out handling 
+        of the "INIT" event and the determining the return code.  Only valid return codes are allowed.  Any other return
+        codes will result in an exception.
+
+
+
+  
+     
+    C. Chain Control
+       Chain control opcodes are used to control the state of chains.  The state of chains are
+           1.  Enabled
+           2.  Disabled
+           3.  Suspended
+        
+        The the following opcodes allow manipulating chains to the various states.
+            1. Enable_Chain
+            2. Disable_Chain
+            3. Suspend_Chain
+            4. Resume_Chain
+        The format for the link definition is as follows:
+        cf.insert_link("link_0", "Enable_Chain", [[chain_1,...,chain_n] ])
+        parameter[0] is a list of valid chain names that the action is to be taken place.
+        
+        There is a side effect of the Enable_Chain opcode.  The side effect is that if the chain is already active,
+        then the Enable_Chain opcode will reset the already active chain.
+
+    D. Event Control
+    
+       Send_Event
+
+       To send an event the following chain flow state is used.
+       cf.insert_link("link_0", "Send_Event", [event_name, event_data ])
+       parameter_1 is the event_data
+       parameter_2 is the event_data , which can be any python object, such a a number or dictionary.
+
+
+    E.  Wait opcodes
+        The Wait opcodes return a HALT return code until a condition is met, then a DISABLE opcode is issued, which
+        removes the link from the chain.  The opcodes are
+           1. Wait
+           2. WaitTime
+           3. WaitEvent
+           4. WaitEventCount
+           5.
+           
+     
+
+
+
+      
+        self.opcodes["SendEvent"] = self.send_event_code
+        self.opcodes["WaitTod"] = self.wait_tod_code
+        self.opcodes["WaitTodGE"] = self.wait_tod_ge_code
+        self.opcodes["WaitTodLE"] = self.wait_tod_le_code
+        self.opcodes["WaitEvent"] = self.wait_event_code
+        self.opcodes["WaitEventCount"] = self.wait_event_count_code
+        self.opcodes["WaitTime"] = self.wait_time_code
+        self.opcodes["Wait"] = self.wait_condition_code
+
+        self.opcodes["WaitEvent_Reset"] = self.wait_event_code_reset
+
+        self.opcodes["Wait_Reset"] = self.wait_condition_code_reset
+        
+ F.  Verify Opcodes  
+self.opcodes["Verify"] = self.verify_condition_code
+
+ G.  State Machine Opcodes
+
+ H.  Misc opcodes
+         self.opcodes["Nop"] = self.nop
+        self.opcodes["Log"] = self.log
+
+
+
+    
+
