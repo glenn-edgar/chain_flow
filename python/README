@@ -3,3 +3,27 @@ To execute examples do
   python3  "example.py"
 
 Examples are written in python 3 and will not run in python 2.
+
+The examples are as follows:
+
+
+
+chain_control_test_py3.py  -- shows the use of the enable, disable, suspend and resume chain opcodes.
+
+
+chain_functions_py3.py  -- this file show how a add user defined functions which are actived when a chain
+                           is enabled and disabled
+
+clusters_py3.py  -- this file shows the use of clusters. Clusters are a chain flow add on which allows
+                    complicated state machine like structures to be created
+
+one_step_event_functions_py3.py  -- this file shows the use of the one_step and event opcodes
+
+return_code_test_py3.py   -- this file shows the use of the return opcodes
+
+runtime_functions_py3.py  -- this file shows the use of the chain flow runtime functions
+                             within the use of of a user defined python function
+
+verify_functions_test_py3.py -- this file shows the use of the verify opcodes
+
+wait_functions_test_py3.py  -- this file shows the use of the wait opcodes
